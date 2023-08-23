@@ -67,11 +67,32 @@ function App() {
       )
       const data = await response.json()
       setUsers(data)
-      setFilteredUsers(data)
     }
 
     fetchUserData()
   }, [])
+
+  /* fetch profiles */
+  useEffect(() => {
+    let newFilteredUsers = users
+    console.log(users)
+    if(searchInput){
+      newFilteredUsers =  newFilteredUsers.filter(user=>(user.acf.first_name.toLowerCase() + ' ' + user.acf.last_name.toLowerCase()).includes(searchInput.toLowerCase()))
+
+    }
+    if(selectedOrgId){
+      newFilteredUsers =  newFilteredUsers.filter(user=>user.organization_type.includes(selectedOrgId))
+    }
+    if(selectedPartnerId){
+      newFilteredUsers =  newFilteredUsers.filter(user=>user.partner_interest.includes(selectedPartnerId))
+    }
+    if(selectedResearchId){
+      console.log(selectedResearchId)
+      newFilteredUsers =  newFilteredUsers.filter(user=>user.research_interest.includes(selectedResearchId))
+    }
+    setFilteredUsers(newFilteredUsers)
+   
+  }, [searchInput, selectedOrgId,selectedResearchId, selectedPartnerId, users ])
 
   const handleSelectResearchChange = (e) => {
     const value = e.target.value
@@ -170,30 +191,9 @@ function App() {
 
       {/* Searched User Profiles */}
       <div style={{ display: 'flex', flexWrap: 'wrap', padding: 20 }}>
-        {selectedOrgId || selectedPartnerId || selectedResearchId
-          ? filteredUsers
-            .filter((user) => {
-              if (selectedOrgId && !selectedPartnerId) {
-                return user.organization.includes(selectedOrgId)
-              } else if (selectedPartnerId && !selectedOrgId) {
-                return user['organization_type'].includes(selectedPartnerId)
-              } else {
-                return user.organization.includes(selectedOrgId)
-                  && user['organization_type'].includes(selectedPartnerId)
-              }
-            })
-            .map((user, i) => (
-              <div key={i} style={{ margin: 20, border: '2px solid #e8e8e8', paddingLeft: 20, paddingRight: 20, paddingTop: 10, borderRadius: 5 }}>
-                <p>
-                  {user.acf.first_name} {user.acf.last_name}
-                </p>
-                <p>
-                  {user.acf.organization}
-                </p>
-                <p>{user.acf.state}</p>
-              </div>
-            ))
-          : filteredUsers.map((user) => (
+        {
+            
+            filteredUsers.map((user) => (
             <div key={user.id} style={{ margin: 20, border: '2px solid #e8e8e8', paddingLeft: 20, paddingRight: 20, paddingTop: 10, borderRadius: 5 }}>
               {user.acf.first_name}
               <span> {user.acf.last_name}</span>
