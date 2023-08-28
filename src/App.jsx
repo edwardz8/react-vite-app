@@ -75,7 +75,6 @@ function App() {
   /* fetch profiles */
   useEffect(() => {
     let newFilteredUsers = users
-    console.log(users)
     if(searchInput){
       newFilteredUsers =  newFilteredUsers.filter(user=>(user.acf.first_name.toLowerCase() + ' ' + user.acf.last_name.toLowerCase()).includes(searchInput.toLowerCase()))
 
@@ -87,13 +86,17 @@ function App() {
       newFilteredUsers =  newFilteredUsers.filter(user=>user.partner_interest.includes(selectedPartnerId))
     }
     if(selectedResearchId){
-      console.log(selectedResearchId)
       newFilteredUsers =  newFilteredUsers.filter(user=>user.research_interest.includes(selectedResearchId))
     }
     setFilteredUsers(newFilteredUsers)
    
   }, [searchInput, selectedOrgId,selectedResearchId, selectedPartnerId, users ])
 
+  const getResearchInterest = (id)=>{
+    if(!research) return
+    const name = research.find(item=>item.id===id)?.name
+    return name
+  }
   const handleSelectResearchChange = (e) => {
     const value = e.target.value
     setSelectedResearchId(value ? +value : null)
@@ -201,6 +204,7 @@ function App() {
               <p>
                 {user.acf.organization}
               </p>
+             <p>{getResearchInterest(user.research_interest[0])}</p>
               <p>{user.acf.state}</p>
             </div>
           ))}
