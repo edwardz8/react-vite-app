@@ -76,7 +76,11 @@ function App() {
   useEffect(() => {
     let newFilteredUsers = users
     if(searchInput){
-      newFilteredUsers =  newFilteredUsers.filter(user=>(user.acf.first_name.toLowerCase() + ' ' + user.acf.last_name.toLowerCase()).includes(searchInput.toLowerCase()))
+      newFilteredUsers =  newFilteredUsers.filter(user=>{
+        const partner_interests = user.partner_interest.map(i=> getPartnerInterest(i)).join(' ')
+        const str = user.acf.first_name + ' ' + user.acf.last_name + ", " + getResearchInterest(user.research_interest[0]) + ', '+ partner_interests + ', ' + user.acf.organization
+        return str.toLowerCase().includes(searchInput.toLowerCase())
+      })
 
     }
     if(selectedOrgId){
@@ -88,6 +92,11 @@ function App() {
     if(selectedResearchId){
       newFilteredUsers =  newFilteredUsers.filter(user=>user.research_interest.includes(selectedResearchId))
     }
+    newFilteredUsers = newFilteredUsers.sort((a, b) => {
+      if (a.acf.last_name < b.acf.last_name) return -1
+      if (a.acf.last_name > b.acf.last_name) return 1
+      return 0
+    })
     setFilteredUsers(newFilteredUsers)
    
   }, [searchInput, selectedOrgId,selectedResearchId, selectedPartnerId, users ])
@@ -97,6 +106,14 @@ function App() {
     const name = research.find(item=>item.id===id)?.name
     return name
   }
+
+  const getPartnerInterest = (id)=>{
+    if(!research) return
+    const name = partner.find(item=>item.id===id)?.name
+    return name
+  }
+
+
   const handleSelectResearchChange = (e) => {
     const value = e.target.value
     setSelectedResearchId(value ? +value : null)
