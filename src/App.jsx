@@ -22,6 +22,7 @@ function App() {
       const response = await fetch(
         // 'https://acf/wp-json/wp/v2/research_interest'
         'https://acf.ornl.gov/wp-json/wp/v2/research_interest'
+        //'https://ac-forum.flywheelstaging.com/wp-json/wp/v2/research_interest'
       )
       const data = await response.json()
       setResearch(data)
@@ -36,6 +37,7 @@ function App() {
       const response = await fetch(
         // 'https://acf/wp-json/wp/v2/organization_type'
         'https://acf.ornl.gov/wp-json/wp/v2/organization_type'
+        // 'https://ac-forum.flywheelstaging.com/wp-json/wp/v2/organization_type'
       )
       const data = await response.json()
       setOrganization(data)
@@ -50,6 +52,7 @@ function App() {
       const response = await fetch(
         // 'https://acf/wp-json/wp/v2/partner_interest'
         'https://acf.ornl.gov/wp-json/wp/v2/partner_interest'
+        // 'https://ac-forum.flywheelstaging.com/wp-json/wp/v2/partner_interest'
       )
       const data = await response.json()
       setPartner(data)
@@ -64,14 +67,62 @@ function App() {
       const response = await fetch(
         // 'https://acf/wp-json/wp/v2/profiles'
         'https://acf.ornl.gov/wp-json/wp/v2/profiles'
+        // 'https://ac-forum.flywheelstaging.com/wp-json/wp/v2/profiles'
       )
       const data = await response.json()
       setUsers(data)
-      setFilteredUsers(data)
     }
 
     fetchUserData()
   }, [])
+
+  /* fetch profiles */
+  useEffect(() => {
+    let newFilteredUsers = users
+    if (searchInput) {
+      newFilteredUsers = newFilteredUsers.filter(user => {
+        const partner_interests = user.partner_interest.map(i => getPartnerInterest(i)).join(' ')
+        const str = user.acf.first_name + ' ' + user.acf.last_name + ", " + getResearchInterest(user.research_interest[0]) + ', ' + partner_interests + ', ' + user.acf.organization
+        return str.toLowerCase().includes(searchInput.toLowerCase())
+      })
+
+    }
+    if (selectedOrgId) {
+      newFilteredUsers = newFilteredUsers.filter(user => user.organization_type.includes(selectedOrgId))
+    }
+    if (selectedPartnerId) {
+      newFilteredUsers = newFilteredUsers.filter(user => user.partner_interest.includes(selectedPartnerId))
+    }
+    if (selectedResearchId) {
+      newFilteredUsers = newFilteredUsers.filter(user => user.research_interest.includes(selectedResearchId))
+    }
+    newFilteredUsers = newFilteredUsers.sort((a, b) => {
+      if (a.acf.last_name < b.acf.last_name) return -1
+      if (a.acf.last_name > b.acf.last_name) return 1
+      return 0
+    })
+    setFilteredUsers(newFilteredUsers)
+
+  }, [searchInput, selectedOrgId, selectedResearchId, selectedPartnerId, users])
+
+  const getResearchInterest = (id) => {
+    if (!research) return
+    const name = research.find(item => item.id === id)?.name
+    return name
+  }
+
+  const getPartnerInterest = (id) => {
+    if (!partner) return
+    const name = partner.find(item => item.id === id)?.name
+    return name
+  }
+
+  const getOrganizationType = (id) => {
+    if (!organization) return
+    const name = organization.find(item => item.id === id)?.name
+    return name
+  }
+
 
   const handleSelectResearchChange = (e) => {
     const value = e.target.value
@@ -164,44 +215,30 @@ function App() {
         </div>
 
         <div style={{ marginLeft: '20px' }}>
-          <button onClick={clearFilters}>Clear Filters</button>
+          <button onClick={clearFilters}>Clear</button>
         </div>
       </div>
 
       {/* Searched User Profiles */}
       <div style={{ display: 'flex', flexWrap: 'wrap', padding: 20 }}>
-        {selectedOrgId || selectedPartnerId || selectedResearchId
-          ? filteredUsers
-            .filter((user) => {
-              if (selectedOrgId && !selectedPartnerId) {
-                return user.organization.includes(selectedOrgId)
-              } else if (selectedPartnerId && !selectedOrgId) {
-                return user['organization_type'].includes(selectedPartnerId)
-              } else {
-                return user.organization.includes(selectedOrgId)
-                  && user['organization_type'].includes(selectedPartnerId)
-              }
-            })
-            .map((user, i) => (
-              <div key={i} style={{ margin: 20, border: '2px solid #e8e8e8', paddingLeft: 20, paddingRight: 20, paddingTop: 10, borderRadius: 5 }}>
-                <p>
-                  {user.acf.first_name} {user.acf.last_name}
-                </p>
-                <p>
-                  {user.acf.organization}
-                </p>
-                <p>{user.acf.state}</p>
-              </div>
-            ))
-          : filteredUsers.map((user) => (
+        {
+
+          filteredUsers.map((user) => (
             <div key={user.id} style={{ margin: 20, border: '2px solid #e8e8e8', paddingLeft: 20, paddingRight: 20, paddingTop: 10, borderRadius: 5 }}>
-              {user.acf.first_name}
-              <span> {user.acf.last_name}</span>
-              <br />
+              <a href={user.link}>
+                {user.acf.first_name}
+                <span> {user.acf.last_name}</span>
+              </a>
+              <p>{user.acf.state}</p>
               <p>
                 {user.acf.organization}
               </p>
-              <p>{user.acf.state}</p>
+              <p>Organization Type: {getOrganizationType(user.organization_type[0])}</p>
+
+              <h4>Interests</h4>
+              <p>Research: {getResearchInterest(user.research_interest[0])}</p>
+              <p>Partner: {getPartnerInterest(user.partner_interest[0])}</p>
+
             </div>
           ))}
       </div>
