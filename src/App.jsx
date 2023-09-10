@@ -8,16 +8,24 @@ function App() {
 
   const [filteredUsers, setFilteredUsers] = useState([])
 
-  const [searchInput, setSearchInput] = useState('')
+  const [searchInput, setSearchInput] = useState(
+    () => JSON.parse(localStorage.getItem('searchInput')) || ''
+  )
 
   const [organization, setOrganization] = useState([])
-  const [selectedOrgId, setSelectedOrgId] = useState('')
+  const [selectedOrgId, setSelectedOrgId] = useState(
+    () => JSON.parse(localStorage.getItem('selectedOrgId')) || ''
+  )
 
   const [research, setResearch] = useState([])
-  const [selectedResearchId, setSelectedResearchId] = useState('')
+  const [selectedResearchId, setSelectedResearchId] = useState(
+    () => JSON.parse(localStorage.getItem('selectedResearchId')) || ''
+  )
 
   const [partner, setPartner] = useState([])
-  const [selectedPartnerId, setSelectedPartnerId] = useState('')
+  const [selectedPartnerId, setSelectedPartnerId] = useState(
+    () => JSON.parse(localStorage.getItem('selectedPartnerId')) || ''
+  )
 
   /* Fetch Research Interest */
   useEffect(() => {
@@ -121,8 +129,26 @@ function App() {
       if (a.acf.last_name > b.acf.last_name) return 1
       return 0
     })
+    saveFilters(
+      searchInput,
+      selectedOrgId,
+      selectedPartnerId,
+      selectedResearchId
+    )
     setFilteredUsers(newFilteredUsers)
   }, [searchInput, selectedOrgId, selectedResearchId, selectedPartnerId, users])
+
+  const saveFilters = (
+    searchInput,
+    selectedOrgId,
+    selectedPartnerId,
+    selectedResearchId
+  ) => {
+    localStorage.setItem('searchInput', JSON.stringify(searchInput))
+    localStorage.setItem('selectedOrgId', JSON.stringify(selectedOrgId))
+    localStorage.setItem('selectedPartnerId', JSON.stringify(selectedPartnerId))
+    localStorage.setItem(  'selectedResearchId',   JSON.stringify(selectedResearchId) )
+  }
 
   const getResearchInterest = (id) => {
     if (!research) return
